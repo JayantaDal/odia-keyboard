@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odia Phonetic Keyboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media(max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        textarea {
+            width: 100%;
+            height: 250px;
+            padding: 15px;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #007BFF;
+            box-shadow: 0 0 5px rgba(0,123,255,0.3);
+        }
+        .odia-box {
+            font-family: 'Kalinga', 'Oriya MN', 'Odia', sans-serif;
+            background-color: #fdfdfd;
+        }
+        .button-group {
+            margin-top: 15px;
+            text-align: right;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Odia Phonetic Typing Keyboard</h1>
+    <p class="subtitle">Type in Phonetic English on the left, get Odia script on the right instantly.</p>
+
+    <div class="grid">
+        <div class="input-group">
+            <label for="englishInput">Type English (Phonetic):</label>
+            <textarea id="englishInput" placeholder="Try typing 'bijNAna' for 'ବିଜ୍ଞାନ'..."></textarea>
+        </div>
+        <div class="input-group">
+            <label for="odiaOutput">Odia Script:</label>
+            <textarea id="odiaOutput" class="odia-box" readonly placeholder="ଓଡ଼ିଆ ଅକ୍ଷର..."></textarea>
+            <div class="button-group">
+                <button onclick="copyOdiaText()">Copy Odia Text</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. EXACT USER MAPPINGS (From your provided keyboard guide)
+    const userMappings = {
+        // Vowels & Standalone
+        "a": "ଅ", "A": "ଆ", "i": "ଇ", "I": "ଈ", "u": "ଉ", "R": "ଊ", "&": "ଋ", "$": "ୠ", "U": "ଌ",
+        "e": "ଏ", "E": "ଐ", "o": "ଓ", "O": "ଔ", "va": "ୱ", "M": "ଂ", "H": "ଃ", "MM": "ଁ",
+        "'": "୍", "|": "।",
+
+        // Exact Consonants provided
+        "ka": "କ", "kha": "ଖ", "ga": "ଗ", "gha": "ଘ", "NG": "ଙ",
+        "ca": "ଚ", "cha": "ଛ", "ja": "ଜ", "jha": "ଝ", "NJ": "ଞ",
+        "Ta": "ଟ", "Tha": "ଠ", "Da": "ଡ", "Dha": "ଢ", "Na": "ଣ",
+        "ta": "ତ", "tha": "ଥ", "da": "ଦ", "dha": "ଧ", "na": "ନ",
+        "pa": "ପ", "pha": "ଫ", "ba": "ବ", "bha": "ଭ", "ma": "ମ",
+        "Ja": "ଯ", "ra": "ର", "La": "ଳ", "la": "ଲ",
+        "sha": "ଶ", "Sha": "ଷ", "sa": "ସ", "ha": "ହ",
+        "kSha": "କ୍ଷ", "D'": "ଡ଼", "Dh'": "ଢ଼", "ya": "ୟ", "k'": "କ୍",
+
+        // Matras
+        "kA": "କା", "ki": "କି", "kI": "କୀ", "ku": "କୁ", "kwa": "କ୍ୱ", "kbu": "କ୍ୱୁ", "kwu": "କ୍ୱୁ",
+        "kU": "କୂ", "ke": "କେ", "kE": "କୈ", "ko": "କୋ", "kO": "କୌ", "kbA": "କ୍ୱା", "kbU": "କ୍ୱୂ",
+        "kwU": "କ୍ୱୂ", "kya": "କ୍ୟ", "kra": "କ୍ର", "kR": "କୃ", "kbi": "କ୍ୱି", "kwi": "କ୍ୱି",
+        "kbI": "କ୍ୱୀ", "kwI": "କ୍ୱୀ", "kLa": "କ୍ଲ", "kla": "କ୍ଳ",
+
+        // Classic Fonts Features
+        "thi": "ଥି", "dhi": "ଧି", "dhya": "ଧ୍ୟ", "tma": "ତ୍ମ", "lA": "ଳ୍ଳ", "cA": "ଚ୍ଚ",
+
+        // Odia Yuktakshara (Conjuncts)
+        "nka": "ଙ୍କ", "nkha": "ଙ୍ଖ", "nga": "ଙ୍ଗ", "ngha": "ଙ୍ଘ", "nca": "ଞ୍ଚ", "ncha": "ଞ୍ଛ",
+        "nja": "ଞ୍ଜ", "njha": "ଞ୍ଝ", "nTa": "ଣ୍ଟ", "nTha": "ଣ୍ଠ", "nDa": "ଣ୍ଡ", "nDha": "ଣ୍ଢ",
+        "nta": "ନ୍ତ", "ntha": "ନ୍ଥ", "nda": "ନ୍ଦ", "ndha": "ନ୍ଧ", "mpa": "ମ୍ପ", "mpha": "ମ୍ଫ",
+        "mba": "ମ୍ବ", "mbha": "ମ୍ଭ", "gga": "ଗ୍ଗ", "gda": "ଗ୍ଦ", "gdha": "ଗ୍ଧ", "cca": "ଚ୍ଚ",
+        "ccha": "ଚ୍ଛ", "jja": "ଜ୍ଜ", "jjha": "ଜ୍ଝ", "jNa": "ଜ୍ଞ", "TTa": "ଟ୍ଟ", "Dga": "ଡ୍ଗ",
+        "DDa": "ଡ୍ଡ", "NNa": "ଣ୍ଣ", "tka": "ତ୍କ", "tta": "ତ୍ତ", "ttha": "ତ୍ଥ", "tpa": "ତ୍ପ",
+        "tsa": "ତ୍ସ", "dga": "ଦ୍ଗ", "dgha": "ଦ୍ଘ", "dda": "ଦ୍ଦ", "ddha": "ଦ୍ଧ", "dbha": "ଦ୍ଭ",
+        "pta": "ପ୍ତ", "ppa": "ପ୍ପ", "psa": "ପ୍ସ", "bja": "ବ୍ଜ", "bda": "ବ୍ଦ", "bdha": "ବ୍ଧ",
+        "bba": "ବ୍ବ", "mma": "ମ୍ମ", "Lka": "ଲ୍କ", "lka": "ଲ୍ଲ", "lga": "ଲ୍ଗ", "Lpa": "ଳ୍ପ",
+        "Lpha": "ଳ୍ଫ", "shca": "ଶ୍ଚ", "shcha": "ଶ୍ଛ", "Shka": "ଶ୍କ", "ShTa": "ଶ୍ଟ", "ShTha": "ଶ୍ଠ",
+        "ShNa": "ଶ୍ଣ", "ska": "ସ୍କ", "skha": "ସ୍ଖ", "sta": "ସ୍ତ", "stha": "ସ୍ଥ", "spa": "ସ୍ପ",
+        "spha": "ସ୍ଫ", "ktra": "କ୍ତ୍ର", "kShN": "କ୍ଷ୍ଣ", "kShya": "କ୍ଷ୍ଯ", "ntya": "ନ୍ୟ",
+        "ntJa": "ନ୍ୟ", "jjwa": "ଜ୍ଜ୍ୱ", "NDra": "ନ୍ଦ୍ର", "ttwa": "ତ୍ତ୍ଵ", "ttra": "ତ୍ତ୍ର",
+        "tmya": "ତ୍ମ୍ଯ", "tsna": "ତ୍ସ୍ନ", "tsya": "ତ୍ସ୍ଯ", "NGkSha": "ଙ୍ଗ୍‌କ୍ଷ", "ntra": "ନ୍ତ୍ର",
+        "ntwa": "ନ୍ତ୍ୱ", "ntba": "ନ୍ତ୍ୱ", "ndra": "ନ୍ଦ୍ର", "ndwa": "ନ୍ଦ୍ୱ", "ndhra": "ନ୍ଧ୍ର",
+        "ndhya": "ନ୍ଧ୍ୟ", "nnya": "ନ୍ୟ", "mpra": "ମ୍ପ୍ର", "mbhra": "ମ୍ଭ୍ର", "rcca": "ର୍‌କ",
+        "rchha": "ର୍‌ଛ", "rdda": "ର୍ଦ୍ଦ", "rddha": "ର୍ଦ୍ଧ", "rtsa": "ର୍ତ୍ସ", "rdra": "ର୍ଦ୍ର",
+        "rJya": "ର୍ୟ", "rshwa": "ର୍ଶ୍ୱ", "rddhwa": "ର୍ଦ୍ଧ୍ୱ", "Shpra": "ଷ୍ପ୍ର", "stra": "ଷ୍ଟ୍ର",
+        "sthya": "ସ୍ଥ୍ୟ", "kka": "କ୍କ", "kTa": "କ୍ତ", "kta": "କ୍ତ", "ksa": "କ୍ଷ",
+        "rNNa": "ର୍ଣ୍ଣ", "rtta": "ର୍ତ", "dJa": "ଜ୍ଜ"
+    };
+
+    // 2. DYNAMIC MATRA GENERATOR
+    const baseConsonants = {
+        "k": "କ", "kh": "ଖ", "g": "ଗ", "gh": "ଘ", "NG": "ଙ",
+        "c": "ଚ", "ch": "ଛ", "j": "ଜ", "jh": "ଝ", "NJ": "ଞ",
+        "T": "ଟ", "Th": "ଠ", "D": "ଡ", "Dh": "ଢ", "N": "ଣ",
+        "t": "ତ", "th": "ଥ", "d": "ଦ", "dh": "ଧ", "n": "ନ",
+        "p": "ପ", "ph": "ଫ", "b": "ବ", "bh": "ଭ", "m": "ମ",
+        "y": "ୟ", "J": "ଯ", "r": "ର", "L": "ଳ", "l": "ଲ", "v": "ୱ",
+        "sh": "ଶ", "Sh": "ଷ", "s": "ସ", "h": "ହ", "kSh": "କ୍ଷ",
+        "D'": "ଡ଼", "Dh'": "ଢ଼"
+    };
+
+    // Fix for "ବିଜ୍ଞାନ" and other conjuncts: 
+    // This dynamically extracts base letters for all conjuncts (e.g. turning "jNa" into a base "jN")
+    // so they can accept matras exactly like normal letters do.
+    for (let key in userMappings) {
+        if (key.length > 1 && key.endsWith('a') && key !== 'va' && key !== 'kwa' && key !== 'kbA') {
+            let base = key.slice(0, -1);
+            if (!baseConsonants[base]) {
+                baseConsonants[base] = userMappings[key]; 
+            }
+        }
+    }
+
+    const matraSigns = {
+        "a": "", "A": "ା", "i": "ି", "I": "ୀ", "u": "ୁ", "U": "ୂ",
+        "e": "େ", "E": "ୈ", "o": "ୋ", "O": "ୌ", "R": "ୃ"
+    };
+
+    for (let bc in baseConsonants) {
+        // Map consonant + vowel signs
+        for (let m in matraSigns) {
+            let key = bc + m;
+            if (!userMappings.hasOwnProperty(key)) {
+                userMappings[key] = baseConsonants[bc] + matraSigns[m];
+            }
+        }
+        // Map bare consonant to half-letter (halant form)
+        if (!userMappings.hasOwnProperty(bc)) {
+            userMappings[bc] = baseConsonants[bc] + "୍";
+        }
+    }
+
+    // 3. LOGIC TO SORT & TRANSLITERATE
+    const sortedKeys = Object.keys(userMappings).sort((a, b) => b.length - a.length);
+
+    function transliterate(text) {
+        let result = "";
+        let i = 0;
+        
+        while (i < text.length) {
+            let match = null;
+            
+            for (let key of sortedKeys) {
+                if (text.startsWith(key, i)) {
+                    match = key;
+                    break;
+                }
+            }
+
+            if (match) {
+                result += userMappings[match];
+                i += match.length;
+            } else {
+                result += text[i];
+                i++;
+            }
+        }
+        return result;
+    }
+
+    // 4. EVENT LISTENERS
+    const englishInput = document.getElementById('englishInput');
+    const odiaOutput = document.getElementById('odiaOutput');
+
+    englishInput.addEventListener('input', function() {
+        odiaOutput.value = transliterate(this.value);
+    });
+
+    function copyOdiaText() {
+        odiaOutput.select();
+        document.execCommand('copy');
+        alert("Odia text copied to clipboard!");
+    }
+</script>
+
+</body>
+</html>
